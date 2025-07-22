@@ -1,57 +1,47 @@
-import os
 import json
+import os
 import argparse
+
+from slugify import slugify
+
 from describer import generate_description
 
-
-def load_products_from_file(input_path):
-    if not os.path.exists(input_path):
-        raise FileNotFoundError(f"❌ Input file not found: {input_path}")
-
-    with open(input_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+from ingest_products import fetch_products
 
 
-def run_pipeline(input_path, category=None):
-
-    all_products = load_products_from_file(input_path)
+def run_pipeline(category=None):
+    fetch_products()
+    os.makedirs("data/descriptions", exist_ok=True)
+    with open("data/raw/products.json", "r", encoding="utf-8") as f:
+        products = json.load(f)
 
     if category:
-        products = [p for p in all_products if p.get("category") == category]
+        products = [p for p in products if p.get("category") == category]
         print(f"📂 Filtered {len(products)} products for category '{category}'")
     else:
-        products = all_products
         print(f"📂 Loaded {len(products)} products")
 
     if not products:
         print("⚠️ No products to process.")
         return
-    output_path = "data/raw/products.json"
 
-    descriptions = []
     for product in products:
+        title = product["title"]
         try:
-            desc = generate_description(product["title"],product["category"],
-                                        product["price"],product["rating"])
-            descriptions.append({
-                "product": product,
-                "description": desc
-            })
+            desc = generate_description(
+                title, product["category"], product["price"], product["rating"]
+            )
+            fname = f"{slugify(title)}.txt"
+            with open(os.path.join("data/descriptions", fname), "w", encoding="utf-8") as f:
+                f.write(desc)
+            print(f"📝 {fname} saved.")
         except Exception as e:
-            print(f"❌ Error processing product {product}: {e}")
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(descriptions, f, ensure_ascii=False, indent=2)
-
-    print(f"✅ Saved {len(descriptions)} descriptions to {output_path}")
+            print(f"❌ Error processing '{title}': {e}")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate product descriptions from file")
-    parser.add_argument("--input", default="data/products.json", help="Path to input JSON file with products")
-    parser.add_argument("--output", default="data/descriptions/descriptions.json", help="Path to output JSON file")
-    parser.add_argument("--category", help="(Optional) Filter by category")
-
+    parser = argparse.ArgumentParser(description="Generate product descriptions.")
+    parser.add_argument("--category", help="(Optional) Filter by product category.")
     args = parser.parse_args()
-    run_pipeline(input_path=args.input, category=args.category)
+
+    run_pipeline(category=args.category)

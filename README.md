@@ -33,3 +33,34 @@ This project is designed for collaborative work between 4 contributors, with cle
 - Git and GitHub setup
 - Environment setup with requirements
 
+## 📌 Ayoub Ennaoui
+### 🛠️ Pipeline Design and Implementation
+
+## How It Works
+
+The main script orchestrates a simple pipeline:
+
+1.  **📦 Fetch Products**: It first calls a function to retrieve product data, which is stored in `data/raw/products.json`.
+2.  **📝 Generate Descriptions**: For each product, it uses its details (title, category, price, rating) to generate a descriptive text.
+3.  **💾 Save Files**: Each description is saved as a separate `.txt` file in the `data/descriptions/` directory. The filename is a URL-friendly "slug" of the product title.
+
+---
+
+## Usage
+
+You can run the pipeline for all products or filter for a specific category.
+
+**1. Run for all products:**
+
+```bash
+python your_script_name.py
+```
+
+**2. Run for selected category:**
+
+```bash
+python your_script_name.py category=example_category
+```
+
+
+
